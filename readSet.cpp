@@ -1,31 +1,21 @@
-#include <unordered_set>
+#include "ReadSet.h"
 
-using namespace std;
+ReadSet::ReadSet(){
+	set = &local;
+}
 
-class ReadSet{
-private:
-	ReadSet(){
-		set = &local;
-	}
+static ReadSet* ReadSet::getLocal(){
+	return new ReadSet();
+}
 
-public:
-	static ReadSet* getLocal(){
-		return new ReadSet();
-	}
+unordered_set<int>::iterator ReadSet::iter(){
+	return set->begin();
+}
 
-	unordered_set<int>::iterator iter(){
-		return set->begin();
-	}
+void ReadSet::add(int x){
+	set->insert(x);
+}
 
-	void add(int x){
-		set->insert(x);
-	}
-
-	void clear(){
-		set->clear();
-	}
-
-protected:
-	thread_local unordered_set<int> local;
-	unordered_set<int>* set;
+void ReadSet::clear(){
+	set->clear();
 }
