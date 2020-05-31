@@ -1,35 +1,41 @@
-#include "transaction.h"
+#include "include/transaction.h"
 
 
 using namespace std;
 
+atomic_long Transaction::GLOBAL_CLOCK{0};
 
 Transaction::Transaction(){
-	status.store(ACTIVE);
-}
+	start_stamp = GLOBAL_CLOCK.load();
+	status = Status::ACTIVE;
 
-Transaction::Transaction(Status myStatus){
-	status.store(myStatus);
 }
-
-Status Transaction::getStatus(){
-	return status.load();
+Transaction::~Transaction() {
+    try {
+        if(!commit())
+            abort();
+    } catch (...) {
+        abort();
+    }
+}
+Transaction::Status Transaction::getStatus(){
+	return status;
 }
 
 bool Transaction::commit(){
-	Status expected = ACTIVE;
-	status.compare_exchange_strong(&expected,COMMITED);
+    if(status == Status::ACTIVE) {
+        GLOBAL_CLOCK.fetch_add(1);
+        // TODO: a series validation
+        status = Status::COMMITED;
+        return true;
+    }
+    return false;
 }
 
 bool Transaction::abort(){
-	Status expected = ACTIVE;
-	status.compare_exchange_strong(&expected,ABORTED);
+	if(status == Status::ACTIVE) {
+	    status = Status::ABORTED;
+	}
+	return true; // no matter what happen just return true
 }
 
-static Transaction* getLocal(){
-	return local;
-}
-
-static void setLocal(Transaction* transaction){
-	local = transaction;
-}

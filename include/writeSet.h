@@ -1,7 +1,7 @@
+#ifndef _WRITESET_H_
+#define _WRITESET_H_
 #include <unordered_map>
 #include <stack>
-
-
 using namespace std;
 class LockObject;
 
@@ -24,7 +24,10 @@ public:
 
 	void clear();
 
+	bool contains(LockObject*);
+
 protected:
 	thread_local unordered_map<LockObject*,int> local;
 	unordered_map<LockObject*,int>* map;
-}
+};
+#endif

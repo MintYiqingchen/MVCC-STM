@@ -4,51 +4,64 @@
 #include <thread>
 #include "transaction.h"
 #include "lockObject.h"
-
+#include <vector>
+#include <iostream>
 using namespace std;
 LockObject A{500}, B{500}, C{500};
 constexpr int CHANGE = 200;
+void report_status(Transaction& t) {
+    // TODO print transaction, A,B and C status
+}
 
 void worker() {
     Transaction transaction; // start a transaction
     int a, b, c;
     // a -> b -> c -> a
     if(A.read(transaction, a) != 0 || B.read(transaction, b) != 0) {
-        return; // auto abort
+        goto final;
     }
     if(a >= CHANGE){
         if(B.write(transaction, b + CHANGE) || A.write(transaction, a - CHANGE))
-            return; // auto abort
+            goto final;
     } else {
         transaction.abort();
-        return;
+        goto final;
     }
 
     if(C.read(transaction, c) != 0 || B.read(transaction, b) != 0) {
-        return; // auto abort
+        goto final;
     }
     if(b >= CHANGE){
         if(B.write(transaction, b - CHANGE) || C.write(transaction, c + CHANGE))
-            return; // auto abort
+            goto final;
     } else {
         transaction.abort();
-        return;
+        goto final;
     }
 
     if(A.read(transaction, a) != 0 || C.read(transaction, c) != 0) {
-        return; // auto abort
+        goto final;
     }
     if(c >= CHANGE){
         if(A.write(transaction, a + CHANGE) || C.write(transaction, c - CHANGE))
-            return; // auto abort
+            goto final;
     } else {
         transaction.abort();
-        return;
+        goto final;
     }
     transaction.commit();
-    // TODO A,B,C status
+
+final:
+    report_status(transaction);
+
 }
 int main(int argc, char** argv) {
-
+    vector<thread> threads;
+    for(int i = 0; i < 4; ++ i) {
+        threads.emplace_back(worker);
+    }
+    for(thread& t: threads)
+        t.join();
+    cout << "finish" << endl;
 }
 

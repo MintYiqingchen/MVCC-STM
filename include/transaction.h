@@ -1,34 +1,33 @@
+#ifndef _TRANSACTION_H_
+#define _TRANSACTION_H_
 #include <atomic>
-
-
+#include <memory>
+#include <unordered_map>
 using namespace std;
+class LockObject;
 
-
-enum Status{ABORTED,ACTIVE,COMMITED};
-
+struct Pack {
+    shared_ptr<LockObject> ptr;
+    int localValue;
+};
 class Transaction{
+    long start_stamp;
+    unordered_map<void*, Pack> writeSet, readSet; // object address -> the local value
 
 public:
+    enum Status {ABORTED,ACTIVE,COMMITED};
+    static atomic_long GLOBAL_CLOCK;
+
 	Transaction();
-
-	Transaction(Status myStatus);
-
+    ~Transaction();
 	Status getStatus();
-
 	bool commit();
-
 	bool abort();
-
-	static Transaction getLocal();
-
-	static void setLocal(Transaction transaction);
-
+    unordered_map<void*, Pack>& getReadSet() {return readSet; };
+    unordered_map<void*, Pack>& getWriteSet() {return writeSet; };
+    long getTimestamp() const {return start_stamp; };
 
 private:
-	const atomic<Status> status;
-
-public:
-	static const Transaction *_COMMITED = new Transaction(COMMITED);
-	thread_local local;
-
-}
+    Status status;
+};
+#endif

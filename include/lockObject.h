@@ -1,32 +1,22 @@
+#ifndef _LOCKOBJECT_H_
+#define _LOCKOBJECT_H_
 #include <atomic>
 #include <mutex>
-
-#include "readSet.h"
-#include "writeSet.h"
+#include "transaction.h"
 
 using namespace std;
-
-#define TIMEOUT 1000
-
 class LockObject{
-
-
 public:
-	LockObject(int init);
+	LockObject(int data):_data(data) {};
 
-	int openRead();
+	int read(Transaction&, int&);
 
-	int opernWrite();
-
-	bool tryLock(long timeout);
-
-	void unlock();
-
-	bool validate();
+	int write(Transaction&, int);
 
 protected:
-	volatile long stamp;
-	atomic_int version;
-	recursive_mutex mtx;
-	unique_lock<recursive_mutex> m_lock(mtx);
-}
+	long read_stamp{-1};
+	long write_stamp{-1};
+	mutex mtx;
+	int _data;
+};
+#endif

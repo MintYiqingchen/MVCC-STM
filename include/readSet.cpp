@@ -1,10 +1,10 @@
-#include "ReadSet.h"
+#include "readSet.h"
 
 ReadSet::ReadSet(){
 	set = &local;
 }
 
-static ReadSet* ReadSet::getLocal(){
+ReadSet* ReadSet::getLocal(){
 	return new ReadSet();
 }
 
