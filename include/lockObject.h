@@ -5,6 +5,9 @@
 #include "transaction.h"
 
 using namespace std;
+
+class Transaction;
+
 class LockObject{
 public:
 	LockObject(int data):_data(data) {};
@@ -15,6 +18,8 @@ public:
 
     template<typename T>
 	bool tryLock(T time, Transaction&);
+
+	bool validate(Transaction &transaction);
 
     void unlock();
 protected:

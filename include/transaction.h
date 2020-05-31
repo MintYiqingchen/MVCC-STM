@@ -3,8 +3,12 @@
 #include <atomic>
 #include <memory>
 #include <unordered_map>
+
+#include "LockObject.h"
 using namespace std;
+
 class LockObject;
+
 
 struct Pack {
     LockObject* ptr;
@@ -30,4 +34,5 @@ public:
 private:
     Status status;
 };
+
 #endif
