@@ -13,10 +13,16 @@ public:
 
 	int write(Transaction&, int);
 
+    template<typename T>
+	bool tryLock(T time, Transaction&);
+
+    void unlock();
 protected:
 	long read_stamp{-1};
 	long write_stamp{-1};
-	mutex mtx;
+	timed_mutex mtx;
+	bool locked = false;
+	long lock_stamp{-1};
 	int _data;
 };
 #endif

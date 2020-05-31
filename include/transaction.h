@@ -7,7 +7,7 @@ using namespace std;
 class LockObject;
 
 struct Pack {
-    shared_ptr<LockObject> ptr;
+    LockObject* ptr;
     int localValue;
 };
 class Transaction{
