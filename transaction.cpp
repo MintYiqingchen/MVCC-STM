@@ -1,6 +1,6 @@
-#include "include/transaction.h"
-
-
+#include "transaction.h"
+#include "lockObject.h"
+#include <vector>
 using namespace std;
 
 atomic_long Transaction::GLOBAL_CLOCK{0};
@@ -8,7 +8,6 @@ atomic_long Transaction::GLOBAL_CLOCK{0};
 Transaction::Transaction(){
 	start_stamp = GLOBAL_CLOCK.load();
 	status = Status::ACTIVE;
-
 }
 Transaction::~Transaction() {
     try {
@@ -24,9 +23,30 @@ Transaction::Status Transaction::getStatus(){
 
 bool Transaction::commit(){
     if(status == Status::ACTIVE) {
-        GLOBAL_CLOCK.fetch_add(1);
-        // TODO: a series validation
-        status = Status::COMMITED;
+        // lock objects in writeSet
+        vector<void*> keys;
+        vector<LockHelper> lks; // RAII
+        for(auto& p: writeSet) {
+            lks.emplace_back();
+            if(!(p.second.ptr)->tryLock(500, start_stamp, lks.back())) {
+                return false;
+            }
+            keys.push_back(p.first);
+        }
+        // get timestamp
+        commit_stamp = GLOBAL_CLOCK.fetch_add(1) + 1;
+        // check read set
+        if(commit_stamp > start_stamp + 1) {
+            for(auto& p: readSet) {
+                if(!p.second.ptr->validate(*this))
+                    return false;
+            }
+        }
+        // update all write value
+        for(auto& p: writeSet) {
+            p.second.ptr->commit(p.second.localValue, commit_stamp);
+        }
+        status = Status::COMMITTED;
         return true;
     }
     return false;

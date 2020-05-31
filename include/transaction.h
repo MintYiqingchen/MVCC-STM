@@ -3,6 +3,7 @@
 #include <atomic>
 #include <memory>
 #include <unordered_map>
+#include <mutex>
 using namespace std;
 class LockObject;
 
@@ -10,12 +11,13 @@ struct Pack {
     LockObject* ptr;
     int localValue;
 };
+
 class Transaction{
-    long start_stamp;
+    long start_stamp, commit_stamp{-1};
     unordered_map<void*, Pack> writeSet, readSet; // object address -> the local value
 
 public:
-    enum Status {ABORTED,ACTIVE,COMMITED};
+    enum Status {ABORTED,ACTIVE,COMMITTED};
     static atomic_long GLOBAL_CLOCK;
 
 	Transaction();
