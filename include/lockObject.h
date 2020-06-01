@@ -24,6 +24,9 @@ public:
     bool isLockedBy(long tid) const {return lock_stamp == tid;}
     bool isLocked();
     bool validate(Transaction&);
+
+    int getValue() const {return _data.load();}
+    long getStamp() const {return write_stamp;}
 protected:
     bool locked = false;
 	long write_stamp{-1}, lock_stamp{-1};

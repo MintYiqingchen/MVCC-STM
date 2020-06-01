@@ -28,7 +28,7 @@ public:
     unordered_map<void*, Pack>& getReadSet() {return readSet; };
     unordered_map<void*, Pack>& getWriteSet() {return writeSet; };
     long getTimestamp() const {return start_stamp; };
-
+    long getCommitStamp() const {return commit_stamp;}
 private:
     Status status;
 };

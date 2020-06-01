@@ -4,8 +4,8 @@
 #include "transaction.h"
 
 int LockObject::read(Transaction& transaction, int& res){
-	auto readSet = transaction.getReadSet();
-	auto writeSet = transaction.getWriteSet();
+	auto& readSet = transaction.getReadSet();
+	auto& writeSet = transaction.getWriteSet();
     if(writeSet.count((void*)this) > 0) { // read local version
         res = writeSet[(void*)this].localValue;
         return 0;
@@ -14,14 +14,14 @@ int LockObject::read(Transaction& transaction, int& res){
         transaction.abort();
         return -1;
     }
-    res = _data; // whether a lock is needed here?
+    res = _data; // whether a lock is needed here? no, this is an atomic type
 
     readSet[(void*)this] = {this, res};
     return 0;
 }
 
 int LockObject::write(Transaction &transaction, int res) {
-	auto writeSet = transaction.getWriteSet();
+	auto& writeSet = transaction.getWriteSet();
     if(writeSet.count((void*)this) > 0) { // set local version
         writeSet[(void*)this].localValue = res;
         return 0;
@@ -57,7 +57,7 @@ bool LockObject::isLocked() {
 
 bool LockObject::validate(Transaction &t) {
     bool free = !isLocked() || isLockedBy(t.getTimestamp());
-    bool pure = t.getTimestamp() <= write_stamp;
+    bool pure = t.getTimestamp() > write_stamp;
     return free && pure;
 }
 
@@ -76,7 +76,7 @@ LockHelper::LockHelper(LockObject *obj) {
     this->obj = obj;
 }
 
-LockHelper::LockHelper(LockHelper &&other) {
+LockHelper::LockHelper(LockHelper &&other) noexcept {
     obj = other.obj;
     other.obj = nullptr;
 }
@@ -87,7 +87,7 @@ LockHelper::~LockHelper() {
     }
 }
 
-LockHelper &LockHelper::operator=(LockHelper &&other) {
+LockHelper &LockHelper::operator=(LockHelper &&other) noexcept {
     obj = other.obj;
     other.obj = nullptr;
     return *this;

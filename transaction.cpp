@@ -1,6 +1,7 @@
 #include "transaction.h"
 #include "lockObject.h"
 #include <vector>
+#include <iostream>
 using namespace std;
 
 atomic_long Transaction::GLOBAL_CLOCK{0};
@@ -47,15 +48,19 @@ bool Transaction::commit(){
             p.second.ptr->commit(p.second.localValue, commit_stamp);
         }
         status = Status::COMMITTED;
-        return true;
+        readSet.clear();
+        writeSet.clear();
+
     }
-    return false;
+    return status == Status::COMMITTED;
 }
 
 bool Transaction::abort(){
 	if(status == Status::ACTIVE) {
 	    status = Status::ABORTED;
-	}
+        readSet.clear();
+        writeSet.clear();
+    }
 	return true; // no matter what happen just return true
 }
 
