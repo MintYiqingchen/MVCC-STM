@@ -25,7 +25,7 @@ class MVCCTransaction;
 
 class MVCCLockObject{
 public:
-	MVCCLockObject(int data){head = new Version(data);}
+	MVCCLockObject(int data){head = new Version(data); _val.store(data); _version_stamp = -1;}
 
 	int read(MVCCTransaction&, int&);
 
@@ -37,11 +37,12 @@ public:
 
     bool validate(MVCCTransaction&);
 
-/*    int getValue() const {return _data.load();}
-    long getStamp() const {return _write_stamp;}*/
+    int getValue() const {return _val.load();}
+    long getStamp() const {return _version_stamp;}
 protected:
 	Version* head;
-
+    atomic_int _val;
+    long _version_stamp;
 };
 
 

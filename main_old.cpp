@@ -2,15 +2,15 @@
 // Created by mintyi on 5/30/20.
 //
 #include <thread>
-#include "mvccTransaction.h"
-#include "mvccLockObject.h"
+#include "transaction.h"
+#include "lockObject.h"
 #include <vector>
 #include <iostream>
 using namespace std;
-MVCCLockObject A(200), B(250), C(100);
+LockObject A{200}, B{250}, C{100};
 constexpr int CHANGE = 200;
 mutex printMtx;
-void report_status(MVCCTransaction& t) {
+void report_status(Transaction& t) {
     lock_guard<mutex> lk(printMtx);
     cout << this_thread::get_id() << " report:";
     cout << " status: " << t.getStatus() << " ts "<<t.getTimestamp() << " cs "<<t.getCommitStamp();
@@ -20,7 +20,7 @@ void report_status(MVCCTransaction& t) {
 }
 
 void worker() {
-    MVCCTransaction transaction; // start a transaction
+    Transaction transaction; // start a transaction
     int a, b, c;
     // a -> b -> c -> a
     if (A.read(transaction, a) != 0 || B.read(transaction, b) != 0) {

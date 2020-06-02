@@ -1,6 +1,8 @@
 #include <chrono>
 #include <unordered_map>
 
+#include <iostream>
+
 #include "mvccLockObject.h"
 #include "mvccTransaction.h"
 
@@ -28,14 +30,17 @@ int MVCCLockObject::read(MVCCTransaction& transaction, int& res){
 
 int MVCCLockObject::write(MVCCTransaction &transaction, int res) {
 	auto& writeSet = transaction.getWriteSet();
+
     if(writeSet.count((void*)this) > 0) { // set local version
         writeSet[(void*)this].version->_data = res;
         return 0;
     }
 
     Version* newVersion = new Version(res,transaction.getTimestamp(),transaction.getTimestamp());
+/*    cout << "version val: " << newVersion->_data<< endl;
+    cout << "Val: " << _val.load()<< endl;*/
 
-    writeSet[(void*)this] = {this,(Version*)newVersion};
+    writeSet[(void*)this] = {this,newVersion};
     return 0;
 }
 
@@ -48,6 +53,7 @@ void MVCCLockObject::readCommit(Version &version, long new_stamp) {
 }
 
 void MVCCLockObject::writeCommit(Version &version) {
+
     auto ptr = head->next;
     auto prev = head;
     prev->lck.lock();
@@ -60,6 +66,12 @@ void MVCCLockObject::writeCommit(Version &version) {
     }
     version.next = ptr;
     prev->next = &version;
+    
+
+    if(_version_stamp < version._write_stamp) {
+        _version_stamp = version._write_stamp;
+        _val.store(version._data);
+    }
     prev->lck.unlock();
     
 }
