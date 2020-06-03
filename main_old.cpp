@@ -3,11 +3,11 @@
 //
 #include <thread>
 #include "transaction.h"
-#include "lockObject.h"
+#include "lockObject.hpp"
 #include <vector>
 #include <iostream>
 using namespace std;
-LockObject A{200}, B{250}, C{100};
+LockObject<int> A{200}, B{250}, C{100};
 constexpr int CHANGE = 200;
 mutex printMtx;
 void report_status(Transaction& t) {

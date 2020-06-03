@@ -1,14 +1,10 @@
 #include "transaction.h"
-#include "lockObject.h"
-#include <vector>
-#include <iostream>
-using namespace std;
-
+#include "lockObject.hpp"
 atomic_long Transaction::GLOBAL_CLOCK{0};
 
 Transaction::Transaction(){
-	start_stamp = GLOBAL_CLOCK.load();
-	status = Status::ACTIVE;
+    start_stamp = GLOBAL_CLOCK.load();
+    status = Status::ACTIVE;
 }
 Transaction::~Transaction() {
     try {
@@ -19,7 +15,7 @@ Transaction::~Transaction() {
     }
 }
 Transaction::Status Transaction::getStatus(){
-	return status;
+    return status;
 }
 
 bool Transaction::commit(){
@@ -56,11 +52,10 @@ bool Transaction::commit(){
 }
 
 bool Transaction::abort(){
-	if(status == Status::ACTIVE) {
-	    status = Status::ABORTED;
+    if(status == Status::ACTIVE) {
+        status = Status::ABORTED;
         readSet.clear();
         writeSet.clear();
     }
-	return true; // no matter what happen just return true
+    return true; // no matter what happen just return true
 }
-

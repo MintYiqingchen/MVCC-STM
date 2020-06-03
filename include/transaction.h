@@ -4,12 +4,14 @@
 #include <memory>
 #include <unordered_map>
 #include <mutex>
+#include <any>
+#include <vector>
+#include "Lockable.h"
 using namespace std;
-class LockObject;
 
 struct Pack {
-    LockObject* ptr;
-    int localValue;
+    Lockable* ptr;
+    any localValue;
 };
 
 class Transaction{
@@ -32,4 +34,7 @@ public:
 private:
     Status status;
 };
+
+
+
 #endif
