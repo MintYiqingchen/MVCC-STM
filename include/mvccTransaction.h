@@ -2,26 +2,21 @@
 #define _TRANSACTION_H_
 #include <atomic>
 #include <memory>
-#include <unordered_map>
-#include <mutex>
-
-#include "mvccLockObject.h"
-
+#include <map>
+#include "LockableList.h"
+#include <any>
 using namespace std;
-class MVCCLockObject;
-
-struct Version;
 
 struct Pack {
-    MVCCLockObject* ptr;
-    Version* version;
+    LockableList* ptr;
+    any localValue;
 };
 
-
 class MVCCTransaction{
-    long start_stamp, commit_stamp{-1};
-    unordered_map<void*, Pack> writeSet, readSet; // object address -> the local value
-
+    long start_stamp; // indicate serialization order
+    // object address -> the local value
+    // ordered by address -> avoid deadlock
+    map<void*, Pack> writeSet;
 public:
     enum Status {ABORTED,ACTIVE,COMMITTED};
     static atomic_long GLOBAL_CLOCK;
@@ -31,10 +26,8 @@ public:
 	Status getStatus();
 	bool commit();
 	bool abort();
-    unordered_map<void*, Pack>& getReadSet() {return readSet; };
-    unordered_map<void*, Pack>& getWriteSet() {return writeSet; };
+    map<void*, Pack>& getWriteSet() {return writeSet; };
     long getTimestamp() const {return start_stamp; };
-    long getCommitStamp() const {return commit_stamp;}
 private:
     Status status;
 };

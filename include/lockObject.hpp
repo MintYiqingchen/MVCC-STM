@@ -47,13 +47,13 @@ public:
         return 0;
 	}
 
-	virtual void commit(const any& value, long new_stamp) {
+	void commit(const any& value, long new_stamp) override {
         // must already be locked before this function
         write_stamp = new_stamp;
         _data = any_cast<T>(value);
 	}
 
-    virtual bool validate(Transaction& t) {
+    bool validate(Transaction& t) override {
         bool free = !isLocked() || isLockedBy(t.getTimestamp());
         bool pure = t.getTimestamp() > write_stamp;
         return free && pure;

@@ -24,31 +24,40 @@ void worker() {
     int a, b, c;
     // a -> b -> c -> a
     if (A.read(transaction, a) != 0 || B.read(transaction, b) != 0) {
+        transaction.abort();
         goto final;
     }
     if (a >= CHANGE) {
-        if (B.write(transaction, b + CHANGE) || A.write(transaction, a - CHANGE))
+        if (B.write(transaction, b + CHANGE) || A.write(transaction, a - CHANGE)) {
+            transaction.abort();
             goto final;
+        }
     } else {
         transaction.abort();
         goto final;
     }
     if (C.read(transaction, c) != 0 || B.read(transaction, b) != 0) {
+        transaction.abort();
         goto final;
     }
     if (b >= CHANGE) {
-        if (B.write(transaction, b - CHANGE) || C.write(transaction, c + CHANGE))
+        if (B.write(transaction, b - CHANGE) || C.write(transaction, c + CHANGE)){
+            transaction.abort();
             goto final;
+        }
     } else {
         transaction.abort();
         goto final;
     }
     if (A.read(transaction, a) != 0 || C.read(transaction, c) != 0) {
+        transaction.abort();
         goto final;
     }
     if (c >= CHANGE) {
-        if (A.write(transaction, a + CHANGE) || C.write(transaction, c - CHANGE))
+        if (A.write(transaction, a + CHANGE) || C.write(transaction, c - CHANGE)){
+            transaction.abort();
             goto final;
+        }
     } else {
         transaction.abort();
         goto final;

@@ -1,5 +1,4 @@
 #include "transaction.h"
-#include "lockObject.hpp"
 atomic_long Transaction::GLOBAL_CLOCK{0};
 
 Transaction::Transaction(){
@@ -21,14 +20,12 @@ Transaction::Status Transaction::getStatus(){
 bool Transaction::commit(){
     if(status == Status::ACTIVE) {
         // lock objects in writeSet
-        vector<void*> keys;
         vector<LockHelper> lks; // RAII
         for(auto& p: writeSet) {
             lks.emplace_back();
             if(!(p.second.ptr)->tryLock(500, start_stamp, lks.back())) {
                 return false;
             }
-            keys.push_back(p.first);
         }
         // get timestamp
         commit_stamp = GLOBAL_CLOCK.fetch_add(1) + 1;
