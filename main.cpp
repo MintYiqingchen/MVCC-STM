@@ -19,7 +19,7 @@ void report_status(MVCCTransaction& t) {
     cout << " C: " << C.getValue() << " ts "<<C.getStamp() << endl;
 }
 
-void worker() {
+void worker1() {
     MVCCTransaction transaction; // start a transaction
     int a, b, c;
     // a -> b -> c -> a
@@ -68,13 +68,58 @@ final:
     report_status(transaction);
 
 }
+
+constexpr int THREAD_NUM = 32;
+MVCCLockObject sVec1{std::vector<char>(THREAD_NUM, 0)};
+MVCCLockObject sVec2{std::vector<char>(THREAD_NUM, 0)};
+atomic_uint success{0};
+atomic_uint fail{0};
+void readTransaction() {
+    MVCCTransaction t;
+    vector<char> local;
+    if(sVec1.read(t, local) != 0) {
+        fail++;
+        return;
+    }
+    if(sVec2.read(t, local) != 0){
+        fail++;
+        return;
+    }
+    this_thread::sleep_for(chrono::milliseconds(200));
+    if(t.commit()){
+        success++;
+        return;
+    }
+    fail++;
+}
+void writeTransaction1(int i) {
+    MVCCTransaction t;
+    vector<char> local;
+    if(sVec1.read(t, local) != 0) {
+        fail++;
+        return;
+    }
+    int pos = i % local.size();
+    local[pos] = i;
+    sVec2.write(t, local);
+    if(t.commit()){
+        success++;
+        return;
+    }
+    fail++;
+}
 int main(int argc, char** argv) {
     vector<thread> threads;
-    for(int i = 0; i < 10; ++ i) {
-        threads.emplace_back(worker);
+    for(int i = 0; i < THREAD_NUM; ++ i) {
+        if(i % 2 == 0)
+            threads.emplace_back(writeTransaction1, i);
+        threads.emplace_back(readTransaction);
+
     }
+
     for(thread& t: threads)
         t.join();
     cout << "finish" << endl;
+    cout << success.load() << " " << fail.load() << endl;
 }
 

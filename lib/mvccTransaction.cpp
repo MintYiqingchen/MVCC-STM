@@ -2,6 +2,7 @@
 #include <vector>
 using namespace std;
 
+long GCManager::min_active_stamp = INT64_MAX;
 atomic_long MVCCTransaction::GLOBAL_CLOCK{0};
 
 MVCCTransaction::MVCCTransaction(){
@@ -34,7 +35,7 @@ bool MVCCTransaction::commit(){
                 return false;
             }
         }
-        // TODO:insert new Node behind each predecessor
+
         for(int i = 0; i < values.size(); ++ i){
             if(!predecessors[i].first->commit(values[i], start_stamp, predecessors[i].second))
                 return false;

@@ -3,6 +3,7 @@
 #include <atomic>
 #include <memory>
 #include <map>
+#include <unordered_map>
 #include "LockableList.h"
 #include <any>
 using namespace std;
@@ -11,7 +12,10 @@ struct Pack {
     LockableList* ptr;
     any localValue;
 };
-
+class GCManager {
+    static long min_active_stamp; //  = INT64_MAX;
+    static unordered_map<void*, LockableList*> objects;
+};
 class MVCCTransaction{
     long start_stamp; // indicate serialization order
     // object address -> the local value
