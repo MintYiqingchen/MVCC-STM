@@ -3,6 +3,7 @@
 //
 
 #include "LockableList.h"
+#include "TxManager.h"
 using namespace std;
 
 bool LockableNode::tryLock(long mils, long tstamp, unique_lock<timed_mutex> &lk) {
@@ -49,4 +50,5 @@ int LockableList::insert_after(LockableNode *pre, LockableNode *newNode) {
     pre->next = newNode;
     return 0;
 }
+
 

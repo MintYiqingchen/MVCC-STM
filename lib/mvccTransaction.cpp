@@ -2,12 +2,12 @@
 #include <vector>
 using namespace std;
 
-long GCManager::min_active_stamp = INT64_MAX;
 atomic_long MVCCTransaction::GLOBAL_CLOCK{0};
 
 MVCCTransaction::MVCCTransaction(){
 	start_stamp = GLOBAL_CLOCK.fetch_add(1) + 1;
 	status = Status::ACTIVE;
+	TxManager::add(start_stamp);
 }
 MVCCTransaction::~MVCCTransaction() {
     try {
@@ -16,6 +16,7 @@ MVCCTransaction::~MVCCTransaction() {
     } catch (...) {
         abort();
     }
+
 }
 MVCCTransaction::Status MVCCTransaction::getStatus(){
 	return status;
@@ -24,23 +25,29 @@ MVCCTransaction::Status MVCCTransaction::getStatus(){
 bool MVCCTransaction::commit(){
     if(status == Status::ACTIVE) {
         // lock all in writeset
-        vector<unique_lock<timed_mutex>> lks; // RAII
-        vector<pair<LockableList*, LockableNode*>> predecessors;
-        vector<any> values;
-        for(auto& p: writeSet) {
-            predecessors.emplace_back(p.second.ptr, p.second.ptr->predecessor(start_stamp));
-            values.push_back(p.second.localValue);
-            lks.emplace_back();
-            if(!predecessors.back().second->tryLock(500, start_stamp, lks.back())) {
-                return false;
+        {
+            vector<unique_lock<timed_mutex>> lks; // RAII
+            vector<pair<LockableList *, LockableNode *>> predecessors;
+            vector<any> values;
+            for (auto &p: writeSet) {
+                predecessors.emplace_back(p.second.ptr, p.second.ptr->predecessor(start_stamp));
+                values.push_back(p.second.localValue);
+                lks.emplace_back();
+                if (!predecessors.back().second->tryLock(500, start_stamp, lks.back())) {
+                    return false;
+                }
             }
-        }
 
-        for(int i = 0; i < values.size(); ++ i){
-            if(!predecessors[i].first->commit(values[i], start_stamp, predecessors[i].second))
-                return false;
+            for (int i = 0; i < values.size(); ++i) {
+                if (!predecessors[i].first->commit(values[i], start_stamp, predecessors[i].second))
+                    return false;
+            }
+            status = Status::COMMITTED;
         }
-        status = Status::COMMITTED;
+        TxManager::remove(start_stamp);
+        for(auto& p: writeSet){
+            p.second.ptr->garbage_collect();
+        }
         writeSet.clear();
     }
     return status == Status::COMMITTED;
@@ -49,6 +56,10 @@ bool MVCCTransaction::commit(){
 bool MVCCTransaction::abort(){
 	if(status == Status::ACTIVE) {
 	    status = Status::ABORTED;
+        TxManager::remove(start_stamp);
+        for(auto& p: writeSet){
+            p.second.ptr->garbage_collect();
+        }
         writeSet.clear();
     }
 	return true; // no matter what happen just return true

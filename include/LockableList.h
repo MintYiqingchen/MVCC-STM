@@ -35,6 +35,8 @@ public:
 
     // commit a new version to the list
     virtual bool commit(const std::any&, long tstamp, LockableNode* pred) = 0;
+
+    virtual void garbage_collect() = 0;
 };
 
 #endif

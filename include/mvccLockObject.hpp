@@ -67,7 +67,21 @@ public:
         insert_after(pred, node);
         return true;
 	}
-
+    void garbage_collect() override {
+	    if(head->next == latest) {
+	        return;
+	    }
+	    unique_lock<timed_mutex> lk1, lk2;
+	    LockableNode* next = head->next;
+        if(!head->tryLock(500, 0, lk1)) return;
+        if(!next->tryLock(500, 0, lk2)) return;
+        if(head->next != next || next == latest || next == tail) return;
+        if(next->next == tail) return;
+        if(next->next->getWstamp() <= TxManager::smallest()) {
+            head->next = next->next;
+            delete next;
+        }
+	};
 	T getValue() const {
 	    lock_guard<timed_mutex> lk(latest->_mtx);
         return latest->_data;
