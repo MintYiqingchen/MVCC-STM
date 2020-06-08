@@ -1,5 +1,5 @@
-#ifndef _TRANSACTION_H_
-#define _TRANSACTION_H_
+#ifndef _MVCCTRANSACTION_H_
+#define _MVCCTRANSACTION_H_
 #include <atomic>
 #include <memory>
 #include <map>

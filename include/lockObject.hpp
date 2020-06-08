@@ -6,7 +6,6 @@
 #include "Lockable.h"
 using namespace std;
 
-
 template<typename T>
 class LockObject: public Lockable {
 public:

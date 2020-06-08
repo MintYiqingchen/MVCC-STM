@@ -1,5 +1,5 @@
-#ifndef _LOCKOBJECT_H_
-#define _LOCKOBJECT_H_
+#ifndef _MVCCLOCKOBJECT_H_
+#define _MVCCLOCKOBJECT_H_
 #include <atomic>
 #include <mutex>
 
