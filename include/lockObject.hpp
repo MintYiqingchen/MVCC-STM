@@ -10,6 +10,10 @@ template<typename T>
 class LockObject: public Lockable {
 public:
 	explicit LockObject(T data):_data(data) {};
+	LockObject(LockObject<T>&& other) {
+	    swap(_data, other._data);
+	    swap(write_stamp, other.write_stamp);
+	}
 
 	int read(Transaction& transaction, T& res) {
         auto& readSet = transaction.getReadSet();
@@ -61,11 +65,9 @@ public:
     T getValue() const {return _data;}
     long getStamp() const {return write_stamp;}
 protected:
-
 	long write_stamp{-1};
 	mutex data_latch; // short period lock, must acquired when change isLocked
 	T _data;
-
 };
 
 

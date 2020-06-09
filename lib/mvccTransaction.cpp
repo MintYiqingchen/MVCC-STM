@@ -44,10 +44,10 @@ bool MVCCTransaction::commit(){
             }
             status = Status::COMMITTED;
         }
-        TxManager::remove(start_stamp);
-        for(auto& p: writeSet){
-            p.second.ptr->garbage_collect();
-        }
+//        TxManager::remove(start_stamp);
+//        for(auto& p: writeSet){
+//            p.second.ptr->garbage_collect();
+//        }
         writeSet.clear();
     }
     return status == Status::COMMITTED;
@@ -56,10 +56,10 @@ bool MVCCTransaction::commit(){
 bool MVCCTransaction::abort(){
 	if(status == Status::ACTIVE) {
 	    status = Status::ABORTED;
-        TxManager::remove(start_stamp);
-        for(auto& p: writeSet){
-            p.second.ptr->garbage_collect();
-        }
+//        TxManager::remove(start_stamp);
+//        for(auto& p: writeSet){
+//            p.second.ptr->garbage_collect();
+//        }
         writeSet.clear();
     }
 	return true; // no matter what happen just return true

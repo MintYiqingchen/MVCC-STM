@@ -9,12 +9,11 @@
 #include "Lockable.h"
 using namespace std;
 
-struct Pack {
-    Lockable* ptr;
-    any localValue;
-};
-
 class Transaction{
+    struct Pack {
+        Lockable* ptr;
+        any localValue;
+    };
     long start_stamp, commit_stamp{-1};
     unordered_map<void*, Pack> writeSet, readSet; // object address -> the local value
 

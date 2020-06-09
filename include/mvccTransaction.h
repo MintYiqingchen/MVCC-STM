@@ -10,12 +10,11 @@
 #include <set>
 using namespace std;
 
-struct Pack {
-    LockableList* ptr;
-    any localValue;
-};
-
 class MVCCTransaction{
+    struct Pack {
+        LockableList* ptr;
+        any localValue;
+    };
     long start_stamp; // indicate serialization order
     // object address -> the local value
     // ordered by address -> avoid deadlock
